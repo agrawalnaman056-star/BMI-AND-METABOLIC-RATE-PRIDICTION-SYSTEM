@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Health | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #050505; --bg-surface: rgba(20, 20, 22, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08); --text-primary: #ffffff;
+            --text-secondary: #a1a1aa; --accent-glow: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body { 
+            background-color: var(--bg-base); color: var(--text-primary); uvi
+            min-height: 100vh; display: flex; justify-content: center; align-items: center; 
+            background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%), 
+                              radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%); 
+            background-attachment: fixed;
+        }
+
+        .auth-container {
+            width: 100%; max-width: 420px; background: var(--bg-surface);
+            backdrop-filter: blur(20px); border: 1px solid var(--border-color);
+            border-radius: 24px; padding: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .brand-title { font-size: 28px; font-weight: 700; background: linear-gradient(to right, #fff, #a1a1aa); -webkit-background-clip: text; color: transparent; text-align: center; margin-bottom: 5px; }
+        .brand-subtitle { font-size: 14px; color: var(--text-secondary); text-align: center; margin-bottom: 40px; }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500;}
+        .input-wrapper { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s ease; }
+        .input-wrapper:focus-within { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
+        
+        input { width: 100%; background: transparent; border: none; padding: 16px; color: white; font-size: 16px; outline: none; }
+
+        .btn-submit { 
+            width: 100%; padding: 16px; margin-top: 15px; 
+            background: linear-gradient(135deg, #2563eb, #4f46e5); color: white; 
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 600; 
+            cursor: pointer; transition: all 0.3s; 
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4); }
+
+        .toggle-text { text-align: center; margin-top: 25px; font-size: 14px; color: var(--text-secondary); }
+        .toggle-text span { color: var(--accent-glow); cursor: pointer; font-weight: 600; transition: color 0.2s; }
+        .toggle-text span:hover { color: #60a5fa; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="brand-title">NEXUS AI</div>
+    <div class="brand-subtitle" id="form-subtitle">Login to your Health Dashboard</div>
+
+    <form id="auth-form">
+        <div id="register-fields" style="display: none;">
+            <div class="input-group">
+                <label>Full Name</label>
+                <div class="input-wrapper"><input type="text" id="name" placeholder="John Doe"></div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Email Address</label>
+            <div class="input-wrapper"><input type="email" id="email" placeholder="hello@nexus.ai" required></div>
+        </div>
+
+        <div class="input-group">
+            <label>Secure Password</label>
+            <div class="input-wrapper"><input type="password" id="password" placeholder="••••••••" required></div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">Initialize Session</button>
+    </form>
+
+    <div class="toggle-text" id="toggle-container">
+        New to Nexus? <span onclick="toggleMode()">Create an AI Profile</span>
+    </div>
+</div>
+
+<script>
+    let isLoginMode = true;
+
+    function toggleMode() {
+        isLoginMode = !isLoginMode;
+        const regFields = document.getElementById('register-fields');
+        const subtitle = document.getElementById('form-subtitle');
+        const btn = document.getElementById('submitBtn');
+        const toggleBox = document.getElementById('toggle-container');
+
+        if(isLoginMode) {
+            regFields.style.display = 'none';
+            subtitle.innerText = "Login to your Health Dashboard";
+            btn.innerText = "Initialize Session";
+            toggleBox.innerHTML = 'New to Nexus? <span onclick="toggleMode()">Create an AI Profile</span>';
+        } else {
+            regFields.style.display = 'block';
+            subtitle.innerText = "Register for AI Health Tracking";
+            btn.innerText = "Generate AI Profile";
+            toggleBox.innerHTML = 'Already registered? <span onclick="toggleMode()">Authenticate Session</span>';
+        }
+    }
+
+    // In a real app, this would connect to FastAPI's /login or /register routes
+    document.getElementById('auth-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        document.getElementById('submitBtn').innerText = "Authenticating...";
+        
+        // Simulate network delay then redirect to your dashboard
+        setTimeout(() => {
+            window.location.href = 'index.html'; // Redirects to your premium dashboard
+        }, 1500);
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | AI Metabolic Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #050505; --bg-surface: rgba(20, 20, 22, 0.6); --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff; --text-secondary: #a1a1aa; --accent-glow: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body { background-color: var(--bg-base); color: var(--text-primary); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 2rem; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%); background-attachment: fixed; }
+
+        .dashboard-wrapper { width: 100%; max-width: 1300px; background: var(--bg-surface); backdrop-filter: blur(20px); border: 1px solid var(--border-color); border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); display: grid; grid-template-columns: 350px 1fr; }
+
+        .sidebar { padding: 40px 30px; border-right: 1px solid var(--border-color); background: rgba(0,0,0,0.2); }
+        .brand-title { font-size: 24px; font-weight: 700; background: linear-gradient(to right, #fff, #a1a1aa); -webkit-background-clip: text; color: transparent; letter-spacing: 1px; }
+        .brand-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 30px; font-weight: 300;}
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500;}
+        .input-wrapper { position: relative; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .input-wrapper:focus-within { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); background: rgba(255,255,255,0.05); }
+        .input-wrapper:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); transform: translateX(4px); }
+
+        input, select { width: 100%; background: transparent; border: none; padding: 14px 16px; color: white; font-size: 16px; font-weight: 500; outline: none; appearance: none; }
+        option { background: #1a1a1a; color: white; }
+        .input-unit { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px; font-weight: 300; pointer-events: none;}
+
+        .btn-submit { width: 100%; padding: 16px; margin-top: 10px; background: linear-gradient(135deg, #2563eb, #4f46e5); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .btn-submit:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 25px rgba(37, 99, 235, 0.6), 0 0 15px rgba(79, 70, 229, 0.4); background: linear-gradient(135deg, #3b82f6, #6366f1); }
+        .btn-submit:disabled { opacity: 0.7; cursor: wait; transform: none; box-shadow: none;}
+
+        .main-content { padding: 40px; display: flex; flex-direction: column; gap: 20px; }
+        .placeholder-state { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-secondary); text-align: center; }
+        
+        .results-grid { display: none; grid-template-columns: 1fr 1fr; gap: 20px; animation: fadeIn 0.6s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 20px; padding: 25px; position: relative; overflow: hidden; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease; }
+        .glass-card:hover { transform: translateY(-6px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 255, 255, 0.03); border-color: rgba(255, 255, 255, 0.15); z-index: 10; }
+        
+        .result-primary { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--accent-glow); background: linear-gradient(90deg, rgba(59,130,246,0.05) 0%, transparent 100%); }
+        .bmr-card { display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #10b981; background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%); }
+        
+        .res-label { font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .res-value { font-size: 32px; font-weight: 700; color: white; letter-spacing: -1px; }
+        .confidence-pill { background: rgba(59,130,246,0.1); color: #60a5fa; padding: 8px 16px; border-radius: 30px; font-size: 14px; font-weight: 600; border: 1px solid rgba(59,130,246,0.2); }
+
+        .plan-section { grid-column: 1 / -1; display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 10px; }
+        
+        .diet-card { background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid var(--border-color); border-radius: 20px; padding: 25px; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);}
+        .diet-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 30px rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.3); z-index: 10;}
+        .diet-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;}
+        .cal-target { font-size: 38px; font-weight: 700; background: linear-gradient(to right, #f43f5e, #f59e0b); -webkit-background-clip: text; color: transparent; line-height: 1; }
+        
+        .macro-visualizer { width: 100%; height: 12px; border-radius: 20px; display: flex; overflow: hidden; margin-bottom: 15px; transition: transform 0.2s ease;}
+        .macro-visualizer:hover { transform: scaleY(1.2); }
+        .macro-p { background: #3b82f6; transition: width 1s; } 
+        .macro-c { background: #10b981; transition: width 1s; } 
+        .macro-f { background: #f59e0b; transition: width 1s; } 
+        
+        .macro-labels { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); }
+        .macro-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+        .fitness-card { background: linear-gradient(180deg, rgba(139, 92, 246, 0.05) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid var(--border-color); border-radius: 20px; padding: 25px; border-left: 4px solid #8b5cf6; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);}
+        .fitness-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 15px 30px rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); z-index: 10;}
+        .fitness-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(139, 92, 246, 0.2); color: #c4b5fd; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .fitness-text { font-size: 15px; color: #e4e4e7; line-height: 1.6; font-weight: 300;}
+
+        @media (max-width: 1000px) { .dashboard-wrapper { grid-template-columns: 1fr; } .results-grid { grid-template-columns: 1fr; } .plan-section { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+    <div class="sidebar">
+        <div class="brand-title">NEXUS AI</div>
+        <div class="brand-subtitle">Health & Metabolic Engine v4.0</div>
+
+        <form id="ai-form">
+            <div class="input-group">
+                <label>Biological Gender</label>
+                <div class="input-wrapper">
+                    <select id="gender" required>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Patient Age</label>
+                <div class="input-wrapper">
+                    <input type="number" id="age" placeholder="e.g. 25" min="1" max="120" required>
+                    <span class="input-unit">YRS</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Patient Height</label>
+                <div class="input-wrapper">
+                    <input type="number" id="height" placeholder="e.g. 175" step="0.1" required>
+                    <span class="input-unit">CM</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Patient Weight</label>
+                <div class="input-wrapper">
+                    <input type="number" id="weight" placeholder="e.g. 70" step="0.1" required>
+                    <span class="input-unit">KG</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">Generate Full Profile</button>
+        </form>
+    </div>
+
+    <div class="main-content">
+        <div class="placeholder-state" id="placeholder">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" style="opacity:0.3; margin-bottom:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            <p>Awaiting data input.<br>Enter patient metrics to generate AI insights and action plan.</p>
+        </div>
+
+        <div class="results-grid" id="dashboard">
+            
+            <div class="glass-card result-primary" id="result-card">
+                <div>
+                    <div class="res-label">Predicted Class (Index <span id="index-num"></span>)</div>
+                    <div class="res-value" id="category-text">--</div>
+                </div>
+                <div class="confidence-pill" id="conf-badge">--% Accuracy</div>
+            </div>
+
+            <div class="glass-card bmr-card">
+                <div>
+                    <div class="res-label">Basal Metabolic Rate (BMR)</div>
+                    <div class="res-value"><span id="bmr-text">--</span> <span style="font-size: 16px; color: var(--text-secondary); font-weight: 400;">kcal/day</span></div>
+                </div>
+            </div>
+
+             <div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
+                <div class="res-label">Model Inference Time</div>
+                <div style="font-size:20px; font-weight: 700; color:#e4e4e7; margin-bottom: 5px;" id="ping-time">-- ms</div>
+                <div style="font-size:13px; color: var(--text-secondary);">Powered by RandomForest</div>
+           </div>
+
+            <div class="plan-section">
+                
+                <div class="diet-card">
+                    <div class="res-label" style="color: #f43f5e; margin-bottom: 10px;">Nutrition Protocol</div>
+                    <div class="diet-header">
+                        <div>
+                            <div class="cal-target" id="cal-text">--</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 5px;">Daily Caloric Target</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 16px; font-weight: 600; color: white;" id="goal-text">--</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">AI Objective</div>
+                        </div>
+                    </div>
+
+                    <div class="res-label" style="margin-bottom: 10px;">Macronutrient Split</div>
+                    <div class="macro-visualizer">
+                        <div class="macro-p" id="bar-p" style="width: 0%;"></div>
+                        <div class="macro-c" id="bar-c" style="width: 0%;"></div>
+                        <div class="macro-f" id="bar-f" style="width: 0%;"></div>
+                    </div>
+                    <div class="macro-labels">
+                        <div><span class="macro-dot" style="background:#3b82f6;"></span>Protein <span id="val-p" style="color:white; font-weight:600; margin-left:5px;">--g</span></div>
+                        <div><span class="macro-dot" style="background:#10b981;"></span>Carbs <span id="val-c" style="color:white; font-weight:600; margin-left:5px;">--g</span></div>
+                        <div><span class="macro-dot" style="background:#f59e0b;"></span>Fat <span id="val-f" style="color:white; font-weight:600; margin-left:5px;">--g</span></div>
+                    </div>
+                </div>
+
+                <div class="fitness-card">
+                    <div class="res-label" style="color: #c4b5fd; margin-bottom: 15px;">Physical Protocol</div>
+                    <div class="fitness-icon">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div class="fitness-text" id="exercise-text">
+                        --
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const themeColors = ['#60a5fa', '#38bdf8', '#10b981', '#eab308', '#f97316', '#ef4444'];
+    const themeGradients = [ 'rgba(96, 165, 250, 0.05)', 'rgba(56, 189, 248, 0.05)', 'rgba(16, 185, 129, 0.05)', 'rgba(234, 179, 8, 0.05)', 'rgba(249, 115, 22, 0.05)', 'rgba(239, 68, 68, 0.05)' ];
+
+    document.getElementById('ai-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const g = document.getElementById('gender').value;
+        const a = parseInt(document.getElementById('age').value);
+        const h = parseFloat(document.getElementById('height').value);
+        const w = parseFloat(document.getElementById('weight').value);
+        const btn = document.getElementById('submitBtn');
+        
+        btn.disabled = true;
+        btn.innerHTML = `<span style="opacity:0.7">Processing...</span>`;
+        const startTime = performance.now();
+
+        try {
+            const res = await fetch("http://127.0.0.1:8000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gender: g, age: a, height: h, weight: w })
+            });
+
+            if (!res.ok) throw new Error("API Error");
+            const data = await res.json();
+            const endTime = performance.now();
+            
+            const idx = data.index_value;
+            const color = themeColors[idx];
+
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'grid';
+
+            const resCard = document.getElementById('result-card');
+            resCard.style.borderLeftColor = color;
+            resCard.style.background = `linear-gradient(90deg, ${themeGradients[idx]} 0%, transparent 100%)`;
+            
+            document.getElementById('index-num').innerText = idx;
+            const catText = document.getElementById('category-text');
+            catText.innerText = data.category;
+            catText.style.color = color;
+            catText.style.textShadow = `0 0 20px ${color}40`; 
+            
+            document.getElementById('conf-badge').innerText = `${data.confidence}% Conf.`;
+            document.getElementById('bmr-text').innerText = data.bmr;
+            document.getElementById('ping-time').innerText = `${Math.round(endTime - startTime)} ms`;
+
+            const plan = data.action_plan;
+            document.getElementById('goal-text').innerText = plan.goal;
+            document.getElementById('cal-text').innerText = plan.target_calories;
+            
+            setTimeout(() => {
+                document.getElementById('bar-p').style.width = `${plan.percentages.p}%`;
+                document.getElementById('bar-c').style.width = `${plan.percentages.c}%`;
+                document.getElementById('bar-f').style.width = `${plan.percentages.f}%`;
+            }, 100);
+
+            document.getElementById('val-p').innerText = `${plan.macros.protein}g`;
+            document.getElementById('val-c').innerText = `${plan.macros.carbs}g`;
+            document.getElementById('val-f').innerText = `${plan.macros.fat}g`;
+            
+            document.getElementById('exercise-text').innerText = plan.exercise;
+
+        } catch (err) {
+            alert("Connection Error. Is uvicorn running on backend?");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Generate Full Profile";
+        }
+    });
+</script>
+
+</body>
+</html>
